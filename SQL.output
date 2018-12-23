@@ -1,0 +1,164 @@
+
+----选课：
+create function select_course(
+	teacher int,
+	student int,
+	course int,
+	time datetime
+) returns int
+begin
+	----limit
+	declare cnt int default 0;
+	declare lim int default 0;
+	select cnt = count(*) from SC
+		where cid = course
+			and teacher = tid;
+	select lim = maxstu from Course
+		where id = course
+			and teacher = tid;
+	if cnt >= lim
+		return 0;
+	----time
+	select cnt = count(*) from Course
+		where cid = course
+			and teacher = tid
+			---- and NOW() between selectstart and selectend
+			---- 如果另一个不能用 用上面这个试试qaq
+			and unix_timestamp(selectstart) <= unix_timestamp(NOW()) 
+			and unix_timestamp(selectend) >= unix_timestamp(NOW()) 
+	if cnt > 0
+		return 0;
+	insert into SC(tid, sid, cid)
+		values(teacher, student, course);
+	return 1;
+end
+
+----退课
+
+create procedure drop_course(
+	teacher int,
+	student int,
+	course int
+)
+begin
+	delete from SC
+		where tid = teacher and
+			sid = student and
+			cid = course;
+end
+
+----查看自己某课情况:
+
+create procedure check_course(
+	student int,
+	course int
+)
+begin
+	select SC.score, SC.tid, Course.credit, Couse.classhour from SC, Course
+		where 
+			SC.sid = student and
+			SC.cid = Course.id and
+			SC.tid = Course.tid and
+			SC.cid = course;
+end
+
+-----------------------------------------------
+
+创建课程：
+create procdure new_course(
+	course_id int,
+	hour int,
+	_credit int,
+	st_time datetime,
+	ed_time datetime,
+	_term date,
+	teacher int,
+	student_limit int
+)
+begin
+	insert int Course(id, classhour, credit, selectstart, selectend, term, tid, maxstu)
+		values(course_id, hour, _credit, st_time, ed_time, _term, teacher, student_limit);
+end
+
+----查看自己教授的课程
+
+create procedure list_teacher_course(
+	teacher int
+)
+begin
+	select id, classhour, credit from Course
+		where tid = teacher;
+end
+
+----查看某门课学生
+
+create procedure list_student_of_course(
+	teacher int,
+	course int
+)
+begin
+	select sid from SC
+		where teacher = tid and course = cid;
+end
+----设定课程情况
+
+create procedure update_course(
+	teacher int,
+	course int,
+	hour int,
+	_credit int,
+	st datetime,
+	ed datetime,
+	_term date,
+	limit int
+)
+begin
+	update Course
+	set
+		maxstu = limit,
+		term = _term,
+		selectend = ed,
+		selectstart = st,
+		credit = _credit,
+		classhour = hour
+	where
+		teacher = tid
+		and course = id;
+end
+
+----设定成绩
+create procedure set_score(
+	teacher int,
+	student int,
+	course int,
+	_score int
+)
+begin
+	update SC set score = _score
+	where
+		teacher = tid
+		and student = sid
+		and course = cid;
+end
+
+----查看报告
+
+create procdure check_course(
+	teacher int,
+	course int,
+)
+begin
+	select max(score), min(score), avg(score) from SC
+	where tid = teacher
+		and course = cid;
+
+	select count(*) from SC
+	where tid = teacher
+		and course = cid
+		and score >= 60;
+
+	select count(*) from SC
+	where tid = teacher
+		and course = cid
+		and score >= 85;
+end
