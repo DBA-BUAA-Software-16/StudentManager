@@ -1,9 +1,10 @@
-#include "mainwindow.h"
+#include "dialog.h"
 #include <QApplication>
+
 #include <QSqlDatabase>
 #include <QMessageBox>
-#include <QDateTime>
-#include "dbopr.h"
+#include <QTimer>
+#include <QDesktopWidget>
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -12,11 +13,9 @@ int main(int argc, char *argv[])
     db.setUserName("root");
     db.setPassword("root");
     db.setDatabaseName("dba");
-
     if(db.open())
     {
-        DBOpr::createCourse(1,20,2,QDateTime::currentDateTime(),QDateTime::currentDateTime(),20);
-        MainWindow w;
+        Dialog w;
         w.show();
         return a.exec();
     }
@@ -24,4 +23,5 @@ int main(int argc, char *argv[])
     {
         QMessageBox::warning(NULL,"warning","数据库打开失败",QMessageBox::Yes);
     }
+    return a.exec();
 }
